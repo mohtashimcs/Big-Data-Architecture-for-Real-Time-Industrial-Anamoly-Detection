@@ -1,0 +1,83 @@
+# Phase 1: central configuration
+# Both datasets are supported through the same pipeline via the `dataset` switch
+# in train_offline.py (--dataset nasa | swat).
+
+nasa_cmapss:
+  # https://www.kaggle.com/datasets/bishals098/nasa-turbofan-engine-degradation-simulation
+  train_file: "data/nasa_cmapss/train_FD001.txt"
+  test_file: "data/nasa_cmapss/test_FD001.txt"
+  rul_file: "data/nasa_cmapss/RUL_FD001.txt"
+  # Standard 26-column C-MAPSS layout
+  columns:
+    - unit_id
+    - cycle
+    - op_setting_1
+    - op_setting_2
+    - op_setting_3
+    - sensor_1
+    - sensor_2
+    - sensor_3
+    - sensor_4
+    - sensor_5
+    - sensor_6
+    - sensor_7
+    - sensor_8
+    - sensor_9
+    - sensor_10
+    - sensor_11
+    - sensor_12
+    - sensor_13
+    - sensor_14
+    - sensor_15
+    - sensor_16
+    - sensor_17
+    - sensor_18
+    - sensor_19
+    - sensor_20
+    - sensor_21
+  # Sensors with ~zero variance in FD001 (commonly dropped in literature)
+  drop_columns: [op_setting_3, sensor_1, sensor_5, sensor_6, sensor_10, sensor_16, sensor_18, sensor_19]
+  id_column: unit_id
+  time_column: cycle
+  # last N cycles of each unit's life are treated as "near failure" -> anomalous
+  anomaly_horizon_cycles: 30
+
+swat:
+  # https://www.kaggle.com/datasets/vishala28/swat-dataset-secure-water-treatment-system
+  normal_file: "data/swat/SWaT_Dataset_Normal_v1.csv"
+  attack_file: "data/swat/SWaT_Dataset_Attack_v0.csv"
+  timestamp_column: "Timestamp"
+  label_column: "Normal/Attack"
+  normal_label: "Normal"
+
+preprocessing:
+  window_size: 30          # contiguous time-series window length
+  window_stride: 1
+  scaler: minmax            # fit on normal data ONLY
+  val_split: 0.1            # fraction of normal windows held out for AE validation
+
+autoencoder:
+  type: lstm                # lstm | dense
+  hidden_dim: 64
+  latent_dim: 16
+  num_layers: 2
+  dropout: 0.2
+  epochs: 30
+  batch_size: 128
+  learning_rate: 0.001
+  early_stopping_patience: 5
+
+fast_backend:
+  # VersaGuardian-style fast mathematical backend
+  stl_period: 30             # seasonal period for STL, ~ one window
+  dmd_rank: 10                # truncation rank for Dynamic Mode Decomposition
+  dmd_window: 30               # snapshot window length fed to DMD
+
+scoring:
+  # final anomaly score = alpha * reconstruction_error + (1 - alpha) * harmonic_mean_distance
+  alpha: 0.5
+  # threshold is calibrated from the normal validation split (e.g. 99.5th percentile)
+  threshold_percentile: 99.5
+
+sla:
+  target_latency_ms: 20
