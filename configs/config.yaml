@@ -44,8 +44,8 @@ nasa_cmapss:
 
 swat:
   # https://www.kaggle.com/datasets/vishala28/swat-dataset-secure-water-treatment-system
-  normal_file: "data/swat/SWaT_Dataset_Normal_v1.csv"
-  attack_file: "data/swat/SWaT_Dataset_Attack_v0.csv"
+  normal_file: "data/swat/normal.csv"
+  attack_file: "data/swat/attack.csv"
   timestamp_column: "Timestamp"
   label_column: "Normal/Attack"
   normal_label: "Normal"
