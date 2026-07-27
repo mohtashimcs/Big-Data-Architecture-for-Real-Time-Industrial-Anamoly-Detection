@@ -8,6 +8,19 @@ handler runs in a `ThreadPoolExecutor` via `loop.run_in_executor`, so a
 slow or CPU-bound handler call (model inference) can never stall the
 asyncio event loop or the packet-intake path -- this is the multi-threaded
 half of the ingestion layer, paired with the asyncio-driven producer side.
+
+In-flight handler tasks are bounded by an `asyncio.Semaphore`
+(`max_inflight`). This matters because `ThreadPoolExecutor`'s own internal
+work queue has no size limit: submitting to it unconditionally (via
+`run_in_executor`) as packets arrive would let queued-but-not-yet-run
+handler calls -- each holding a reference to its window array -- grow
+without bound whenever handlers can't keep up with intake, which is a
+genuine memory-growth/"thread lockup" failure mode under sustained high
+throughput. Bounding in-flight tasks means a saturated handler pool instead
+suspends `_dispatch` (awaiting the semaphore), which stops packet intake,
+which fills the shared queue, which finally backpressures the producers --
+one coherent, visible backpressure chain instead of an unbounded internal
+buffer.
 """
 from __future__ import annotations
 
@@ -52,15 +65,21 @@ class StreamConsumer:
         handler: WindowHandler,
         stride: int = 1,
         max_workers: int = 4,
+        max_inflight: Optional[int] = None,
     ) -> None:
         if window_size < 1:
             raise ValueError("window_size must be >= 1")
         if stride < 1:
             raise ValueError("stride must be >= 1")
+        if max_workers < 1:
+            raise ValueError("max_workers must be >= 1")
+        if max_inflight is not None and max_inflight < 1:
+            raise ValueError("max_inflight must be >= 1")
 
         self.window_size = window_size
         self.stride = stride
         self.handler = handler
+        self.max_inflight = max_inflight or max_workers * 4
 
         self._buffers: Dict[str, Deque[SensorPacket]] = defaultdict(
             lambda: deque(maxlen=window_size)
@@ -70,7 +89,9 @@ class StreamConsumer:
         self._executor = ThreadPoolExecutor(
             max_workers=max_workers, thread_name_prefix="anomaly-detector"
         )
+        self._inflight = asyncio.Semaphore(self.max_inflight)
         self._pending: list[asyncio.Future] = []
+        self._prune_threshold = max(64, self.max_inflight * 4)
         self._processed = 0
 
     @property
@@ -105,7 +126,7 @@ class StreamConsumer:
             received += 1
             self._processed += 1
             queue.task_done()
-            self._dispatch(packet, loop)
+            await self._dispatch(packet, loop)
             self._prune_pending()
 
         if self._pending:
@@ -113,7 +134,7 @@ class StreamConsumer:
         self._executor.shutdown(wait=True)
         return received
 
-    def _dispatch(self, packet: SensorPacket, loop: asyncio.AbstractEventLoop) -> None:
+    async def _dispatch(self, packet: SensorPacket, loop: asyncio.AbstractEventLoop) -> None:
         """Append `packet` to its producer's window buffer, firing the handler when ready."""
         buf = self._buffers[packet.producer_id]
         buf.append(packet)
@@ -139,9 +160,14 @@ class StreamConsumer:
         )
         self._window_counts[packet.producer_id] += 1
 
+        # See module docstring: bounding in-flight handler tasks here is what
+        # turns "unbounded executor queue growth under overload" into
+        # coherent, visible backpressure all the way back to the producers.
+        await self._inflight.acquire()
         future = loop.run_in_executor(
             self._executor, self._safe_handle, packet.producer_id, window, meta
         )
+        future.add_done_callback(lambda _f: self._inflight.release())
         self._pending.append(future)
 
     def _safe_handle(self, producer_id: str, window: np.ndarray, meta: WindowMeta) -> None:
@@ -152,8 +178,8 @@ class StreamConsumer:
                 "handler failed for producer=%s window_id=%d", producer_id, meta.window_id
             )
 
-    def _prune_pending(self, keep_recent: int = 256) -> None:
+    def _prune_pending(self) -> None:
         """Drop completed futures so long-running streams don't grow this list unbounded."""
-        if len(self._pending) <= keep_recent:
+        if len(self._pending) <= self._prune_threshold:
             return
         self._pending = [f for f in self._pending if not f.done()]

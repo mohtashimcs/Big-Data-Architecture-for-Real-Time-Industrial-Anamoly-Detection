@@ -1,0 +1,435 @@
+{
+  "sla_ms": 20.0,
+  "window_size": 30,
+  "stride": 5,
+  "classification_and_latency": [
+    {
+      "engine": "nasa_cmapss/dmd_stl_fast_track",
+      "fit_time_sec": 0.15560167900002853,
+      "n_train_windows": 2993,
+      "n_val_windows": 528,
+      "n_test_windows": 2614,
+      "test_anomaly_rate": 0.43726090283091046,
+      "metrics": {
+        "f1": 0.07737594617325484,
+        "auc_roc": 0.6470628119139764,
+        "precision": 1.0,
+        "recall": 0.04024496937882765
+      },
+      "latency": {
+        "count": 2614,
+        "mean_ms": 0.27497238179103045,
+        "p50_ms": 0.26350299992827786,
+        "p95_ms": 0.37511349997885185,
+        "p99_ms": 0.4747083201255008,
+        "max_ms": 0.887183000031655,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.0
+      },
+      "params": {
+        "name": "dmd-stl-fast-track",
+        "threshold": Infinity,
+        "stl_period": 30,
+        "dmd_rank": 8,
+        "stl_weight": 0.5,
+        "fit_time_sec": 0.1535427820001587,
+        "n_features": 16
+      },
+      "dataset": "nasa_cmapss",
+      "engine_type": "dmd_stl_fast_track"
+    },
+    {
+      "engine": "nasa_cmapss/lstm_autoencoder",
+      "fit_time_sec": 5.801900432999901,
+      "n_train_windows": 2993,
+      "n_val_windows": 528,
+      "n_test_windows": 2614,
+      "test_anomaly_rate": 0.43726090283091046,
+      "metrics": {
+        "f1": 0.1937984496124031,
+        "auc_roc": 0.5967884198023854,
+        "precision": 0.8503401360544217,
+        "recall": 0.10936132983377078
+      },
+      "latency": {
+        "count": 2614,
+        "mean_ms": 1.2633555719211156,
+        "p50_ms": 1.1481729999331947,
+        "p95_ms": 1.8964857499099703,
+        "p99_ms": 2.7393034999158754,
+        "max_ms": 4.830670000046666,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.0
+      },
+      "params": {
+        "name": "lstm-autoencoder",
+        "threshold": Infinity,
+        "architecture": "lstm",
+        "hidden_dim": 32,
+        "latent_dim": 12,
+        "num_layers": 2,
+        "n_features": 16,
+        "window_size": 30,
+        "quantized": false,
+        "train_time_sec": 4.726837214999932,
+        "epochs_run": 15
+      },
+      "dataset": "nasa_cmapss",
+      "engine_type": "lstm_autoencoder"
+    },
+    {
+      "engine": "nasa_cmapss/dense_autoencoder",
+      "fit_time_sec": 0.5837781470002028,
+      "n_train_windows": 2993,
+      "n_val_windows": 528,
+      "n_test_windows": 2614,
+      "test_anomaly_rate": 0.43726090283091046,
+      "metrics": {
+        "f1": 0.1937984496124031,
+        "auc_roc": 0.5967884198023854,
+        "precision": 0.8503401360544217,
+        "recall": 0.10936132983377078
+      },
+      "latency": {
+        "count": 2614,
+        "mean_ms": 0.20533734621210398,
+        "p50_ms": 0.19054500000947883,
+        "p95_ms": 0.3344965000792399,
+        "p99_ms": 0.42355573008080655,
+        "max_ms": 0.6744469999375724,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.0
+      },
+      "params": {
+        "name": "dense-autoencoder",
+        "threshold": Infinity,
+        "architecture": "dense",
+        "hidden_dim": 32,
+        "latent_dim": 12,
+        "num_layers": 2,
+        "n_features": 16,
+        "window_size": 30,
+        "quantized": false,
+        "train_time_sec": 0.5738455949999661,
+        "epochs_run": 12
+      },
+      "dataset": "nasa_cmapss",
+      "engine_type": "dense_autoencoder"
+    },
+    {
+      "engine": "tcm5/dmd_stl_fast_track",
+      "fit_time_sec": 0.018310786999791162,
+      "n_train_windows": 1016,
+      "n_val_windows": 179,
+      "n_test_windows": 595,
+      "test_anomaly_rate": 0.1411764705882353,
+      "metrics": {
+        "f1": 0.680161943319838,
+        "auc_roc": 1.0,
+        "precision": 0.5153374233128835,
+        "recall": 1.0
+      },
+      "latency": {
+        "count": 595,
+        "mean_ms": 0.11352783024548666,
+        "p50_ms": 0.10881299999709881,
+        "p95_ms": 0.16323829997872963,
+        "p99_ms": 0.1964827399524436,
+        "max_ms": 0.20825699994020397,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.0
+      },
+      "params": {
+        "name": "dmd-stl-fast-track",
+        "threshold": Infinity,
+        "stl_period": 30,
+        "dmd_rank": 8,
+        "stl_weight": 0.5,
+        "fit_time_sec": 0.018028680000043096,
+        "n_features": 5
+      },
+      "dataset": "tcm5",
+      "engine_type": "dmd_stl_fast_track"
+    },
+    {
+      "engine": "tcm5/lstm_autoencoder",
+      "fit_time_sec": 1.9222758230000636,
+      "n_train_windows": 1016,
+      "n_val_windows": 179,
+      "n_test_windows": 595,
+      "test_anomaly_rate": 0.1411764705882353,
+      "metrics": {
+        "f1": 0.7161572052401747,
+        "auc_roc": 0.9930807939614201,
+        "precision": 0.5655172413793104,
+        "recall": 0.9761904761904762
+      },
+      "latency": {
+        "count": 595,
+        "mean_ms": 1.218702872267936,
+        "p50_ms": 1.1463650000678172,
+        "p95_ms": 1.5202729999145943,
+        "p99_ms": 3.166776559887686,
+        "max_ms": 7.218046999923899,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.0
+      },
+      "params": {
+        "name": "lstm-autoencoder",
+        "threshold": Infinity,
+        "architecture": "lstm",
+        "hidden_dim": 32,
+        "latent_dim": 12,
+        "num_layers": 2,
+        "n_features": 5,
+        "window_size": 30,
+        "quantized": false,
+        "train_time_sec": 1.9181765430000723,
+        "epochs_run": 15
+      },
+      "dataset": "tcm5",
+      "engine_type": "lstm_autoencoder"
+    },
+    {
+      "engine": "tcm5/dense_autoencoder",
+      "fit_time_sec": 0.2262446079998881,
+      "n_train_windows": 1016,
+      "n_val_windows": 179,
+      "n_test_windows": 595,
+      "test_anomaly_rate": 0.1411764705882353,
+      "metrics": {
+        "f1": 0.7168141592920354,
+        "auc_roc": 0.996878203336129,
+        "precision": 0.5704225352112676,
+        "recall": 0.9642857142857143
+      },
+      "latency": {
+        "count": 595,
+        "mean_ms": 0.25344552941418397,
+        "p50_ms": 0.24077200009742228,
+        "p95_ms": 0.3758564001373088,
+        "p99_ms": 0.4502618199376226,
+        "max_ms": 0.6212470000264148,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.0
+      },
+      "params": {
+        "name": "dense-autoencoder",
+        "threshold": Infinity,
+        "architecture": "dense",
+        "hidden_dim": 32,
+        "latent_dim": 12,
+        "num_layers": 2,
+        "n_features": 5,
+        "window_size": 30,
+        "quantized": false,
+        "train_time_sec": 0.22316142599993327,
+        "epochs_run": 15
+      },
+      "dataset": "tcm5",
+      "engine_type": "dense_autoencoder"
+    }
+  ],
+  "stress_tests": [
+    {
+      "n_producers": 4,
+      "target_rate_hz_per_producer": 400.0,
+      "messages_per_producer": 600,
+      "emitted": 2400,
+      "received": 2400,
+      "dropped": 0,
+      "drop_rate": 0.0,
+      "elapsed_sec": 2.4425705119999748,
+      "throughput_pkts_per_sec": 982.5714296513315,
+      "windows_scored": 80,
+      "latency": {
+        "count": 80,
+        "mean_ms": 0.7962734124987492,
+        "p50_ms": 0.8008720001271286,
+        "p95_ms": 1.142346199947042,
+        "p99_ms": 1.3356348899924328,
+        "max_ms": 1.5095999999630294,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.0
+      },
+      "dataset": "nasa_cmapss",
+      "engine_type": "dmd_stl_fast_track",
+      "scenario": "moderate"
+    },
+    {
+      "n_producers": 8,
+      "target_rate_hz_per_producer": 5000.0,
+      "messages_per_producer": 600,
+      "emitted": 4800,
+      "received": 1677,
+      "dropped": 3123,
+      "drop_rate": 0.650625,
+      "elapsed_sec": 0.2962405170001148,
+      "throughput_pkts_per_sec": 5660.94070109711,
+      "windows_scored": 50,
+      "latency": {
+        "count": 50,
+        "mean_ms": 1.4326572399886572,
+        "p50_ms": 0.7940799999914816,
+        "p95_ms": 2.8328518500188666,
+        "p99_ms": 14.035708829953778,
+        "max_ms": 24.063673000000563,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.02
+      },
+      "dataset": "nasa_cmapss",
+      "engine_type": "dmd_stl_fast_track",
+      "scenario": "extreme"
+    },
+    {
+      "n_producers": 4,
+      "target_rate_hz_per_producer": 400.0,
+      "messages_per_producer": 600,
+      "emitted": 2400,
+      "received": 2400,
+      "dropped": 0,
+      "drop_rate": 0.0,
+      "elapsed_sec": 2.4505925680000473,
+      "throughput_pkts_per_sec": 979.3549655456042,
+      "windows_scored": 80,
+      "latency": {
+        "count": 80,
+        "mean_ms": 11.054224537494406,
+        "p50_ms": 10.930614000017158,
+        "p95_ms": 13.598041500029007,
+        "p99_ms": 16.31708857996727,
+        "max_ms": 17.03464399997756,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.0
+      },
+      "dataset": "nasa_cmapss",
+      "engine_type": "lstm_autoencoder",
+      "scenario": "moderate"
+    },
+    {
+      "n_producers": 8,
+      "target_rate_hz_per_producer": 5000.0,
+      "messages_per_producer": 600,
+      "emitted": 4800,
+      "received": 1598,
+      "dropped": 3202,
+      "drop_rate": 0.6670833333333334,
+      "elapsed_sec": 0.3347298569999566,
+      "throughput_pkts_per_sec": 4773.998992268584,
+      "windows_scored": 49,
+      "latency": {
+        "count": 49,
+        "mean_ms": 28.394703795922805,
+        "p50_ms": 18.58893099984016,
+        "p95_ms": 111.46712180002376,
+        "p99_ms": 179.4981773200286,
+        "max_ms": 210.9949329999381,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.4489795918367347
+      },
+      "dataset": "nasa_cmapss",
+      "engine_type": "lstm_autoencoder",
+      "scenario": "extreme"
+    },
+    {
+      "n_producers": 4,
+      "target_rate_hz_per_producer": 400.0,
+      "messages_per_producer": 600,
+      "emitted": 2400,
+      "received": 2400,
+      "dropped": 0,
+      "drop_rate": 0.0,
+      "elapsed_sec": 2.4331918860000314,
+      "throughput_pkts_per_sec": 986.3587059487544,
+      "windows_scored": 80,
+      "latency": {
+        "count": 80,
+        "mean_ms": 0.3487488374929626,
+        "p50_ms": 0.34409650004363357,
+        "p95_ms": 0.4756210999971699,
+        "p99_ms": 0.5553018799378134,
+        "max_ms": 0.7622250000167696,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.0
+      },
+      "dataset": "tcm5",
+      "engine_type": "dmd_stl_fast_track",
+      "scenario": "moderate"
+    },
+    {
+      "n_producers": 8,
+      "target_rate_hz_per_producer": 5000.0,
+      "messages_per_producer": 600,
+      "emitted": 4800,
+      "received": 1859,
+      "dropped": 2941,
+      "drop_rate": 0.6127083333333333,
+      "elapsed_sec": 0.25219754699992336,
+      "throughput_pkts_per_sec": 7371.20571597219,
+      "windows_scored": 58,
+      "latency": {
+        "count": 58,
+        "mean_ms": 0.38264731034783395,
+        "p50_ms": 0.3093645000262768,
+        "p95_ms": 0.7959025501577343,
+        "p99_ms": 1.5068987699874012,
+        "max_ms": 2.0538359999591194,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.0
+      },
+      "dataset": "tcm5",
+      "engine_type": "dmd_stl_fast_track",
+      "scenario": "extreme"
+    },
+    {
+      "n_producers": 4,
+      "target_rate_hz_per_producer": 400.0,
+      "messages_per_producer": 600,
+      "emitted": 2400,
+      "received": 2400,
+      "dropped": 0,
+      "drop_rate": 0.0,
+      "elapsed_sec": 2.438024551000126,
+      "throughput_pkts_per_sec": 984.4035405695453,
+      "windows_scored": 80,
+      "latency": {
+        "count": 80,
+        "mean_ms": 11.722303987505711,
+        "p50_ms": 11.663856999916788,
+        "p95_ms": 14.233797199813125,
+        "p99_ms": 15.353605500022221,
+        "max_ms": 17.907240999875285,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.0
+      },
+      "dataset": "tcm5",
+      "engine_type": "lstm_autoencoder",
+      "scenario": "moderate"
+    },
+    {
+      "n_producers": 8,
+      "target_rate_hz_per_producer": 5000.0,
+      "messages_per_producer": 600,
+      "emitted": 4800,
+      "received": 1477,
+      "dropped": 3323,
+      "drop_rate": 0.6922916666666666,
+      "elapsed_sec": 0.3473174719999861,
+      "throughput_pkts_per_sec": 4252.593431291758,
+      "windows_scored": 45,
+      "latency": {
+        "count": 45,
+        "mean_ms": 45.059458666648624,
+        "p50_ms": 21.128246999978728,
+        "p95_ms": 149.73275699994701,
+        "p99_ms": 153.72530923998966,
+        "max_ms": 153.9554749999752,
+        "sla_ms": 20.0,
+        "sla_violation_rate": 0.5555555555555556
+      },
+      "dataset": "tcm5",
+      "engine_type": "lstm_autoencoder",
+      "scenario": "extreme"
+    }
+  ]
+}

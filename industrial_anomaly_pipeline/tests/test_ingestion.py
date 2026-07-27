@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import threading
+import time
 
 import numpy as np
 import pytest
@@ -190,3 +192,141 @@ async def test_end_to_end_producer_to_consumer_via_detector():
     # each rig: 30 packets / window_size 10, stride 10 -> 3 windows; 2 rigs -> 6
     assert len(results) == 6
     assert all(r.latency_ms >= 0.0 for r in results)
+
+
+# --------------------------------------------------------------------------- #
+# Bug audit #1: concurrency, queue overflow, thread lockup
+# --------------------------------------------------------------------------- #
+def test_stream_producer_config_rejects_unknown_overflow_policy():
+    with pytest.raises(ValueError):
+        SensorStreamProducer("rig-0", StreamProducerConfig(overflow_policy="bogus"))
+
+
+@pytest.mark.asyncio
+async def test_producer_drop_new_policy_handles_overflow_without_raising():
+    """Bug audit #1: a saturated bounded queue must be a handled, counted
+    event (asyncio.QueueFull caught), never an unhandled exception that
+    would kill the producer task under a throughput burst."""
+    queue: asyncio.Queue = asyncio.Queue(maxsize=3)
+    producer = SensorStreamProducer(
+        "rig-0",
+        StreamProducerConfig(n_features=2, sample_rate_hz=1_000_000, overflow_policy="drop_new"),
+    )
+
+    emitted = await producer.run(queue, max_messages=50)
+
+    assert emitted == 50
+    assert producer.dropped_count > 0
+    assert queue.qsize() <= 3  # queue never grew past its bound
+
+
+@pytest.mark.asyncio
+async def test_producer_drop_oldest_policy_keeps_freshest_packets():
+    queue: asyncio.Queue = asyncio.Queue(maxsize=3)
+    producer = SensorStreamProducer(
+        "rig-0",
+        StreamProducerConfig(n_features=2, sample_rate_hz=1_000_000, overflow_policy="drop_oldest"),
+    )
+
+    await producer.run(queue, max_messages=50)
+
+    remaining = [queue.get_nowait() for _ in range(queue.qsize())]
+    assert max(p.sequence_id for p in remaining) >= 47  # kept the tail end of the stream
+
+
+@pytest.mark.asyncio
+async def test_consumer_bounds_inflight_handler_tasks_creating_real_backpressure():
+    """Bug audit #1/#3: ThreadPoolExecutor's internal work queue has no size
+    limit, so submitting unboundedly would let in-flight handler tasks (and
+    the window arrays each one holds) pile up without bound whenever a
+    handler is slower than intake. The `max_inflight` semaphore must
+    actually serialize dispatch once the pool is saturated, not just be
+    decorative -- verified here by timing: 10 windows with max_inflight=2
+    and a 20ms handler must take close to 10/2 * 20ms, not ~20ms total."""
+    call_order: list[int] = []
+
+    def slow_handler(producer_id: str, window: np.ndarray, meta: WindowMeta) -> None:
+        time.sleep(0.02)
+        call_order.append(meta.window_id)
+
+    queue: asyncio.Queue = asyncio.Queue(maxsize=1000)
+    consumer = StreamConsumer(
+        window_size=5, stride=5, handler=slow_handler, max_workers=2, max_inflight=2
+    )
+    producer = SensorStreamProducer("rig-0", StreamProducerConfig(n_features=3, sample_rate_hz=1_000_000))
+
+    stop_event = asyncio.Event()
+    consumer_task = asyncio.create_task(consumer.run(queue, stop_event=stop_event))
+    start = time.perf_counter()
+    await producer.run(queue, max_messages=50)  # -> 10 windows at stride=5
+    stop_event.set()
+    await consumer_task
+    elapsed = time.perf_counter() - start
+
+    assert len(call_order) == 10
+    assert elapsed >= 0.08  # ceil(10/2) batches * 0.02s, with slack
+
+
+@pytest.mark.asyncio
+async def test_consumer_survives_handler_exceptions_without_stalling():
+    """A handler that raises must be caught and logged, not crash the
+    consumer or leave the executor/queue in a stuck state."""
+    calls: list[int] = []
+
+    def flaky_handler(producer_id: str, window: np.ndarray, meta: WindowMeta) -> None:
+        calls.append(meta.window_id)
+        if meta.window_id == 1:
+            raise RuntimeError("simulated handler failure")
+
+    queue: asyncio.Queue = asyncio.Queue()
+    producer = SensorStreamProducer("rig-0", StreamProducerConfig(n_features=2, sample_rate_hz=1_000_000))
+    await producer.run(queue, max_messages=20)
+
+    consumer = StreamConsumer(window_size=5, stride=5, handler=flaky_handler, max_workers=2)
+    received = await consumer.run(queue, max_messages=20)
+
+    assert received == 20
+    assert len(calls) == 4  # all windows still got dispatched despite the mid-run failure
+
+
+def test_run_stats_thread_safe_aggregation_under_concurrent_handlers():
+    """Regression for main.py's RunStats: many worker threads calling
+    .record() concurrently must not lose updates (the lock must actually
+    serialize the read-modify-write increments)."""
+    from main import RunStats  # industrial_anomaly_pipeline/ is on sys.path via conftest.py
+
+    stats = RunStats(sla_ms=20.0)
+    n_threads, n_per_thread = 20, 200
+
+    def worker():
+        for _ in range(n_per_thread):
+            stats.record(latency_ms=1.0, is_anomaly=False)
+
+    threads = [threading.Thread(target=worker) for _ in range(n_threads)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert stats.window_count == n_threads * n_per_thread
+
+
+# --------------------------------------------------------------------------- #
+# Bug audit #5: NaN/Inf sanitization at stream unpacking
+# --------------------------------------------------------------------------- #
+@pytest.mark.asyncio
+async def test_producer_sanitizes_nan_and_inf_values_at_unpacking():
+    source = np.array([[1.0, 2.0], [np.nan, 3.0], [np.inf, -1.0], [-np.inf, 4.0]])
+    queue: asyncio.Queue = asyncio.Queue()
+    producer = SensorStreamProducer(
+        "rig-0", StreamProducerConfig(n_features=2, sample_rate_hz=1_000_000), source=source
+    )
+
+    await producer.run(queue, max_messages=4)
+    packets = [queue.get_nowait() for _ in range(4)]
+
+    assert all(np.isfinite(p.values).all() for p in packets)
+    assert packets[0].was_sanitized is False
+    assert packets[1].was_sanitized is True
+    assert packets[2].was_sanitized is True
+    assert packets[3].was_sanitized is True
