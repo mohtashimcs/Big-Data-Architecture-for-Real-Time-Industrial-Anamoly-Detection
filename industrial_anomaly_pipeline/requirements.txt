@@ -1,0 +1,13 @@
+# Install with: pip install -r requirements.txt --break-system-packages
+
+numpy>=1.26
+pandas>=2.2
+scipy>=1.11
+scikit-learn>=1.4          # metrics: F1, AUC-ROC, Precision/Recall, MinMaxScaler
+torch>=2.2                 # LSTM / Dense Autoencoder (Engine 2)
+statsmodels>=0.14          # Seasonal-Trend decomposition (STL) for the DMD fast-track engine
+pyyaml>=6.0                # config loading
+matplotlib>=3.8            # benchmark / results plots
+tqdm>=4.66                 # training & load-test progress bars
+pytest>=8.0                # unit / integration tests
+pytest-asyncio>=0.23       # tests for the asyncio ingestion layer
