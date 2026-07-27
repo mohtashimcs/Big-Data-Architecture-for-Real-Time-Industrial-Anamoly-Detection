@@ -1,0 +1,38 @@
+% =========================================================================
+% paper.tex — canonical IEEE conference-format wrapper.
+% Compile on Overleaf (IEEEtran is preinstalled there) or any TeX Live
+% distribution with the IEEEtran class:  pdflatex paper.tex  (run twice).
+% All content lives in paper_body.tex, shared with paper_preview.tex.
+% =========================================================================
+\documentclass[conference]{IEEEtran}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+
+\begin{document}
+
+\title{Scalable Big Data Architecture for Real-Time Industrial Anomaly
+Detection in Multivariate Time-Series Under a Sub-20\,ms SLA}
+
+\author{
+\IEEEauthorblockN{Mohtashim Ali}
+\IEEEauthorblockA{\textit{[Department / School]} \\
+\textit{[University Name]}\\
+[City, Country] \\
+[email address]}
+\and
+\IEEEauthorblockN{Usman Butt}
+\IEEEauthorblockA{\textit{[Department / School]} \\
+\textit{[University Name]}\\
+[City, Country] \\
+[email address]}
+% NOTE: confirm with your supervisor whether they should appear as a
+% co-author and in what order, per your institution's authorship norms.
+}
+
+\maketitle
+
+\input{paper_body}
+
+\end{document}

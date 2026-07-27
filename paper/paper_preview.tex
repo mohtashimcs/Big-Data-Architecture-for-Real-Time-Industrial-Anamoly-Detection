@@ -1,0 +1,44 @@
+% =========================================================================
+% paper_preview.tex — local preview wrapper approximating the IEEE
+% two-column conference layout using only base TeX Live packages, for
+% environments where IEEEtran.cls is unavailable. The authoritative
+% submission file is paper.tex (IEEEtran). Content is identical: both
+% wrappers \input the same paper_body.tex.
+% =========================================================================
+\documentclass[10pt,twocolumn]{article}
+
+\usepackage[letterpaper,left=0.75in,right=0.75in,top=0.75in,bottom=1in]{geometry}
+\usepackage{mathptmx}          % Times text+math, approximating IEEE look
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+\setlength{\columnsep}{0.25in}
+\setlength{\parindent}{1em}
+
+% ---- minimal fallbacks for IEEEtran-specific commands used in the body ----
+\newcommand{\IEEEPARstart}[2]{#1#2}
+\newenvironment{IEEEkeywords}%
+  {\par\noindent\small\textbf{\textit{Index Terms---}}\itshape}%
+  {\par\normalsize}
+
+\title{\LARGE\bfseries Scalable Big Data Architecture for Real-Time
+Industrial Anomaly Detection in Multivariate Time-Series Under a
+Sub-20\,ms SLA}
+
+\author{%
+Mohtashim Ali\\
+\small\textit{[Department / School], [University Name]}\\
+\small [email address]
+\and
+Usman Butt\\
+\small\textit{[Department / School], [University Name]}\\
+\small [email address]
+}
+\date{}
+
+\begin{document}
+\maketitle
+
+\input{paper_body}
+
+\end{document}
