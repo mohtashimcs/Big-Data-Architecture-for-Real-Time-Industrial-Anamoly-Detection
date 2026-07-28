@@ -104,7 +104,7 @@ Detection uses a `DynamicThresholder`: a rolling baseline of the $L$ most recent
 
 ### F. Benchmarking & SLA Monitoring Harness
 
-`benchmarks/test_latency.py` defines `LatencyTracker`, a microsecond-precision (`time.perf_counter()`) accumulator reporting p50/p95/p99/max latency and SLA-violation rate against the 20ms target, exercised both as pytest SLA regression assertions and as the instrument `benchmarks/run_experiments.py` uses for the full empirical run (Section V): fit → calibrate on a held-out normal split → stream the labeled test split *in temporal order* through the fitted engine and composite scorer, recording per-window latency and classification outcome exactly as a deployed system would encounter it, rather than shuffling the evaluation set. A separate stress-test harness drives the real asyncio ingestion pipeline (producers → bounded queue → consumer → engine) at a target throughput well beyond provisioned capacity to evaluate elasticity: throughput, drop rate, and latency stability under load.
+`benchmarks/test_latency.py` defines `LatencyTracker`, a microsecond-precision (`time.perf_counter()`) accumulator reporting p50/p95/p99/max latency and SLA-violation rate against the 20ms target, exercised both as pytest SLA regression assertions and as the instrument `benchmarks/run_experiments.py` uses for the full empirical run (Section V): fit → calibrate on a held-out normal split → stream the labeled test split *in temporal order* through the fitted engine and composite scorer, recording per-window latency and classification outcome exactly as a deployed system would encounter it, rather than shuffling the evaluation set. A separate stress-test harness drives the real asyncio ingestion pipeline (producers → bounded queue → consumer → engine) at a target throughput well beyond provisioned capacity to evaluate elasticity: throughput, drop rate, and latency stability under load. `benchmarks/visualize_results.py` regenerates every figure in Section V directly from `benchmarks/results/experiment_results.json`, so the plots stay reproducible from a fresh experiment run rather than hand-maintained.
 
 ---
 
@@ -160,6 +160,10 @@ Three engine configurations were evaluated: the DMD+STL fast-track (`stl_period=
 | TCM5 (synthetic) | LSTM Autoencoder | 0.716 | 0.993 | 0.566 | 0.976 |
 | TCM5 (synthetic) | Dense Autoencoder | 0.717 | 0.997 | 0.570 | 0.964 |
 
+![Classification accuracy by engine and dataset](figures/classification_accuracy.png)
+
+*Fig. 1. F1, AUC-ROC, Precision, and Recall per engine, per dataset, under fully dynamic (streamed, self-calibrating) thresholding. Color is fixed per engine across every figure in this paper: DMD + STL is blue, LSTM Autoencoder is orange, Dense Autoencoder is aqua.*
+
 On TCM5's discrete, multi-channel-consistent injected anomalies, both engines achieve near-perfect ranking (AUC-ROC 0.99-1.00) and strong F1 (0.68-0.72) under fully dynamic (streamed, self-calibrating) thresholding. NASA C-MAPSS is a substantially harder, more realistic task: "near failure" is a gradual, continuous degradation rather than a discrete regime shift, so AUC-ROC of 0.60-0.65 — well above chance but far from separable — is a believable outcome for a raw-window composite score rather than an artifact; recall is the binding constraint (precision is high because whatever is flagged is reliably a genuine near-failure window). This asymmetry between a crisp synthetic benchmark and a gradual real one is itself informative: it indicates the composite scoring formulation as specified (harmonic mean of distance and localized error, with a generic rolling threshold) is well suited to discrete-regime-shift faults and would benefit, on gradual-degradation tasks specifically, from a trend-aware distance term or an RUL-informed threshold schedule — noted as future work (Section VI).
 
 ### C. Latency and SLA Compliance
@@ -172,6 +176,10 @@ On TCM5's discrete, multi-channel-consistent injected anomalies, both engines ac
 | TCM5 | DMD + STL fast-track | 0.109 | 0.163 | 0.196 | 0.208 | 0 / 595 |
 | TCM5 | LSTM Autoencoder | 1.146 | 1.520 | 3.167 | 7.218 | 0 / 595 |
 | TCM5 | Dense Autoencoder | 0.241 | 0.376 | 0.450 | 0.621 | 0 / 595 |
+
+![Per-window latency at nominal throughput, log scale, with the 20ms SLA line](figures/nominal_latency.png)
+
+*Fig. 2. Per-window latency percentiles at nominal (non-burst) throughput, log scale, against the 20ms SLA (dashed line). Every engine clears the SLA with wide margin; the DMD fast-track's p99 stays under half a millisecond on both datasets.*
 
 Every engine clears the 20ms SLA with zero violations at nominal (non-bursty) throughput, and by a wide margin — the DMD fast-track's p99 stays under half a millisecond on both datasets, roughly $6$-$16\times$ faster than the LSTM autoencoder's, with the Dense autoencoder splitting the difference (comparable to DMD's latency, since it avoids the LSTM's sequential recurrence, while still learning a nonlinear reconstruction). Engine 1 fit (initialization) time was 0.018-0.156s across both datasets, and the LSTM/Dense autoencoders 0.2-5.8s (15 epochs or early-stopped) — all far under the "&lt;20 min init" target.
 
@@ -189,6 +197,14 @@ Two burst scenarios were run through the real asyncio ingestion pipeline per (da
 | TCM5 | DMD + STL | extreme | 7,371 | 61.3% | 1.51 | 0 / 58 |
 | TCM5 | LSTM AE | moderate | 984 | 0.0% | 15.35 | 0 / 80 |
 | TCM5 | LSTM AE | extreme | 4,253 | 69.2% | 153.73 | 25 / 45 |
+
+![Burst stress test p99 latency, moderate vs extreme load, with the 20ms SLA line](figures/stress_latency.png)
+
+*Fig. 3. p99 latency under the moderate and extreme burst scenarios, log scale, against the 20ms SLA (dashed line). At moderate load both engines hold the SLA; under the extreme burst the DMD fast-track still holds it (with one violation on NASA C-MAPSS out of 50 scored windows) while the LSTM autoencoder's p99 rises 7.7-9$\times$ past it.*
+
+![Burst stress test throughput and drop rate, moderate vs extreme load](figures/stress_throughput_drop.png)
+
+*Fig. 4. Achieved throughput and the fraction of packets shed by the `drop_new` overflow policy, moderate vs. extreme load. Moderate load is fully absorbed (0% drop) for both engines; the extreme burst is shed, not crashed — direct, visible evidence of the bounded in-flight concurrency fix in Section IV-A.*
 
 At moderate load, throughput matches the target rate almost exactly with zero drops for every engine, and both engines hold their p99 latency under the 20ms SLA — the LSTM autoencoder now visibly closer to the ceiling (15.4-16.3ms) than the DMD engine (0.6-1.3ms), but still compliant. Under the extreme burst — roughly 4-8$\times$ the achieved moderate-scenario throughput — the system does not crash or exhibit unbounded queue growth: the bounded queue and `drop_new` policy shed 61-69% of incoming packets, a direct, visible, and *measured* consequence of the concurrency fix in Section IV-A rather than a silent failure mode. What that graceful degradation reveals, however, is a sharp divergence between the two engines once the handler itself becomes the bottleneck: the DMD engine's p99 latency stays at 1.5-14.0ms (1/50 and 0/58 windows respectively breach the SLA), while the LSTM autoencoder's p99 rises to 150-180ms, with roughly half of all scored windows breaching the SLA. This is the empirical case for the dual-engine architecture: a deployment that must guarantee SLA compliance under bursty, unpredictable load has a fast-track engine available that a purely deep-learning pipeline would not.
 
