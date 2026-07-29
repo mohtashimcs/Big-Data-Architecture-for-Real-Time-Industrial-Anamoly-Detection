@@ -1,0 +1,11 @@
+{
+  "name": "research-paper-docx-builder",
+  "private": true,
+  "description": "Regenerates research_paper.docx from build_paper.js via docx-js.",
+  "scripts": {
+    "build": "node build_paper.js"
+  },
+  "dependencies": {
+    "docx": "^9.7.1"
+  }
+}
