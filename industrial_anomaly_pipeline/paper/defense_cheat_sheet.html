@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Defense Cheat Sheet</title>
+<style>
+  @page { size: letter; margin: 0.38in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Liberation Sans", "DejaVu Sans", Arial, sans-serif;
+    font-size: 7.6pt;
+    line-height: 1.28;
+    color: #111;
+    margin: 0;
+  }
+  .accent { color: #1c5cab; }
+  h1 {
+    font-size: 13pt; margin: 0 0 1pt 0; text-align: center; color: #0b0b0b;
+  }
+  .subtitle { text-align: center; font-size: 8.2pt; color: #52514e; margin: 0 0 6pt 0; }
+
+  .thesis {
+    border: 1pt solid #1c5cab; background: #eef4fb; border-radius: 3pt;
+    padding: 5pt 8pt; margin: 0 0 7pt 0; font-size: 8pt; text-align: center;
+  }
+  .thesis b { color: #1c5cab; }
+
+  .cols { column-count: 3; column-gap: 0.22in; }
+  .block { break-inside: avoid; page-break-inside: avoid; margin: 0 0 7pt 0; }
+  h2 {
+    font-size: 8pt; text-transform: uppercase; letter-spacing: 0.3pt;
+    background: #2a3f5f; color: #fff; padding: 2pt 5pt; margin: 0 0 3pt 0; border-radius: 2pt;
+  }
+  h3 { font-size: 7.6pt; margin: 4pt 0 1pt 0; color: #1c5cab; }
+  p { margin: 0 0 3pt 0; text-align: left; }
+  ul { margin: 0 0 3pt 0; padding-left: 10pt; }
+  li { margin-bottom: 1.5pt; }
+  .formula { font-style: italic; background: #f2f2ef; padding: 1.5pt 4pt; display: inline-block; margin: 1.5pt 0; }
+  code { font-family: "Liberation Mono", monospace; font-size: 6.8pt; background: #f2f2ef; padding: 0 1.5pt; }
+  .num { font-weight: bold; color: #1c5cab; }
+
+  table.k { width: 100%; border-collapse: collapse; font-size: 7pt; margin-top: 2pt; }
+  table.k caption { caption-side: top; }
+  table.k th, table.k td { padding: 1.5pt 3pt; text-align: right; border-bottom: 0.5pt solid #ddd; }
+  table.k th:first-child, table.k td:first-child { text-align: left; }
+  table.k th:nth-child(2), table.k td:nth-child(2) { text-align: left; }
+  table.k thead tr { border-bottom: 1pt solid #333; }
+
+  .qa { margin-bottom: 3pt; }
+  .qa .q { font-weight: bold; }
+  .qa .q::before { content: "Q: "; color: #1c5cab; }
+  .qa .a::before { content: "A: "; font-weight: bold; }
+
+  .footer-strip { column-span: all; text-align: center; font-size: 6.6pt; color: #898781; margin-top: 4pt; border-top: 0.5pt solid #ddd; padding-top: 3pt; }
+</style>
+</head>
+<body>
+
+<h1>Real-Time Industrial Anomaly Detection &mdash; Defense Cheat Sheet</h1>
+<div class="subtitle">Scalable Big Data Architecture for Real-Time Industrial Anomaly Detection in Multivariate Time-Series</div>
+
+<div class="thesis"><b>Thesis (say this first):</b> Most systems pick one anomaly-detection model and live with its speed/accuracy tradeoff. This system runs a fast closed-form engine (DMD+STL) and a deep autoencoder behind one identical interface &mdash; so the tradeoff itself becomes measurable, and the empirical burst-load test proves it's real: the fast engine holds &lt;15ms p99 latency where the autoencoder's p99 blows past 150ms.</div>
+
+<div class="cols">
+
+<div class="block">
+<h2>1&nbsp;&middot;&nbsp;The Problem</h2>
+<p>Industrial sensors stream continuously; you must flag abnormal behavior <b>fast</b> (hard SLA: <span class="num">&lt;20ms</span>/window) and <b>without labels</b> (train only on normal data, flag deviations &mdash; unsupervised). Most papers optimize accuracy only and ignore whether the model could actually run at required speed. That gap is this paper's reason for existing.</p>
+</div>
+
+<div class="block">
+<h2>2&nbsp;&middot;&nbsp;Architecture (4 layers)</h2>
+<ul>
+<li><code>ingestion/</code> &mdash; asyncio producers &rarr; bounded queue &rarr; consumer batches sliding windows &rarr; thread pool scores them (never blocks intake).</li>
+<li><code>analytics/</code> &mdash; two engines, one shared interface <code>BaseAnomalyDetector</code> (Strategy pattern) &rarr; swappable, fair head-to-head comparison.</li>
+<li><code>evaluation/</code> &mdash; fuses engine error + regime distance &rarr; dynamic threshold &rarr; anomaly / not.</li>
+<li><code>benchmarks/</code> &mdash; measures accuracy, latency, and burst behavior; produces every number/figure in the paper.</li>
+</ul>
+</div>
+
+<div class="block">
+<h2>3&nbsp;&middot;&nbsp;Engine 1: DMD + STL (fast-track)</h2>
+<p><b>DMD:</b> assume <i>x</i>(t+1) &asymp; A&middot;x(t). Fit A once via one SVD on normal data (no gradient descent). At inference: how wrong was A's prediction? &rarr; <code>dmd_prediction_error</code>.</p>
+<p><b>STL:</b> split signal into seasonal + trend + residual. Residual should be small noise if normal; a big residual = anomaly &rarr; <code>stl_residual_energy</code>.</p>
+<p>Score = 50/50 blend of both. <b>Why fast:</b> fit = one SVD (ms); score = one matrix multiply (sub-ms), no iteration ever.</p>
+</div>
+
+<div class="block">
+<h2>4&nbsp;&middot;&nbsp;Engine 2: Autoencoder</h2>
+<p>Neural net trained to compress &amp; reconstruct <i>normal</i> windows only. Good at reconstructing normal shapes, bad at anomalous ones (never saw them) &rarr; high reconstruction MSE = anomaly.</p>
+<p><b>LSTM variant:</b> true sequence model, any window length. <b>Dense variant:</b> flattens window, cheaper/faster but locked to one window length (dimension-mismatch guard needed &mdash; see Bug Audit B).</p>
+<p>Result: Dense AE &asymp; DMD's latency, keeps LSTM's accuracy &rarr; the LSTM's <i>recurrence</i>, not "being a neural net," is what costs the latency.</p>
+</div>
+
+<div class="block">
+<h2>5&nbsp;&middot;&nbsp;Evaluation Engine</h2>
+<p><b>Composite score</b> (harmonic mean of distance-to-normal-regime <i>d</i> and engine error <i>e</i>):</p>
+<div class="formula">score = 2&middot;d&middot;e / (d+e+&epsilon;), &epsilon;=1e-8</div>
+<p>Harmonic mean &mdash; not average &mdash; because it's dominated by the <i>smaller</i> input: a window only looks normal if <b>both</b> signals agree. One good signal can't mask one bad one.</p>
+<p><b>Dynamic threshold:</b> rolling <span class="num">mean+3&sigma;</span> of last 500 "passed" scores. Bug found empirically: if baseline drifts, every new-normal score exceeds the stale threshold and never updates it &rarr; stuck forever. Fix: after 50 consecutive flags, force-recalibrate from the recent run. This alone took TCM5 F1 <span class="num">0.249&rarr;0.391</span>.</p>
+</div>
+
+<div class="block">
+<h2>6&nbsp;&middot;&nbsp;Bug Audit (5 categories, 56 tests)</h2>
+<ul>
+<li><b>Concurrency:</b> ThreadPoolExecutor's internal queue is <i>unbounded</i> &rarr; would leak memory under load. Fixed with a semaphore that bounds in-flight windows &amp; backpressures the whole chain.</li>
+<li><b>Dimension mismatch:</b> Dense AE / DMD now raise clear errors on wrong channel count or window length, instead of crashing inside numpy/PyTorch.</li>
+<li><b>PyTorch leakage:</b> every inference wrapped in <code>torch.no_grad()</code> + <code>.eval()</code> &mdash; verified via a grad-spy test and a determinism test.</li>
+<li><b>Div-by-zero:</b> harmonic mean &amp; threshold &sigma; both floored at &epsilon;=1e-8.</li>
+<li><b>NaN/Inf:</b> sanitized at ingestion with a causal running-mean impute, flagged via <code>was_sanitized</code>.</li>
+<li><b>Found only by running the full experiment:</b> C-MAPSS "normal" train split secretly contained near-failure data (trimmed to match test's anomaly horizon) + the threshold-drift bug above.</li>
+</ul>
+</div>
+
+</div>
+
+<table class="k">
+<caption style="font-size:7.4pt; font-weight:bold; text-align:left; margin-bottom:2pt;">7 &middot; Key Numbers (memorize these)</caption>
+<thead><tr><th>Metric</th><th>NASA C-MAPSS (real)</th><th>TCM5 (synthetic)</th></tr></thead>
+<tbody>
+<tr><td>AUC-ROC (DMD / LSTM AE)</td><td>0.647 / 0.597</td><td>1.000 / 0.993</td></tr>
+<tr><td>F1 (DMD / LSTM AE)</td><td>0.077 / 0.194</td><td>0.680 / 0.716</td></tr>
+<tr><td>Nominal p99 latency (DMD / LSTM AE)</td><td>0.48ms / 2.74ms</td><td>0.20ms / 3.17ms</td></tr>
+<tr><td>Extreme-burst p99 (DMD / LSTM AE)</td><td>14.0ms / 179.5ms</td><td>1.5ms / 153.7ms</td></tr>
+<tr><td>Extreme-burst SLA violations (DMD / LSTM AE)</td><td>1/50 / 22/49</td><td>0/58 / 25/45</td></tr>
+<tr><td>Engine fit/init time</td><td colspan="2">DMD: 18&ndash;156ms &nbsp;|&nbsp; AE: 0.2&ndash;5.8s (target was &lt;20 min)</td></tr>
+</tbody>
+</table>
+
+<div class="cols" style="margin-top:6pt;">
+<div class="block">
+<h2>8&nbsp;&middot;&nbsp;Anticipated Q&amp;A</h2>
+<div class="qa"><div class="q">Why harmonic mean, not average?</div><div class="a">Can't be fooled by one good signal masking one bad one &mdash; needs <i>both</i> low.</div></div>
+<div class="qa"><div class="q">Why is C-MAPSS's F1/AUC so much lower than TCM5's?</div><div class="a">Gradual continuous degradation (fuzzy label boundary) vs. TCM5's discrete injected anomaly (clean boundary). Not a bug &mdash; an honest property of the task; AUC&asymp;1.0 there would be suspicious.</div></div>
+</div>
+<div class="block">
+<h2>&nbsp;</h2>
+<div class="qa"><div class="q">Why drop 60%+ of packets in the extreme burst?</div><div class="a">Deliberately 5&ndash;8&times; beyond provisioned capacity, to find the breaking point. Point isn't "never drop" &mdash; it's "degrade safely (bounded memory, no crash) instead of falling over."</div></div>
+<div class="qa"><div class="q">Why 2 datasets, one real one synthetic?</div><div class="a">NASA = real, messy, gradual degradation. TCM5 = controlled, reproducible, license-free ground truth to validate the pipeline itself works before trusting messier real data.</div></div>
+</div>
+<div class="block">
+<h2>&nbsp;</h2>
+<div class="qa"><div class="q">What's the actual novel contribution?</div><div class="a">Not a new model &mdash; a <i>system</i>: dual engines under one interface + co-designed concurrency/latency as measured SLA properties + a bug audit as part of the empirical result, not just cleanup.</div></div>
+<div class="qa"><div class="q">Biggest limitation / future work?</div><div class="a">Distance term uses raw values, not trend-aware &mdash; hurts gradual-degradation tasks specifically. Also: adaptive engine selection (escalate to AE only on borderline DMD scores).</div></div>
+</div>
+</div>
+
+<div class="footer-strip">Sections map to paper: 1&rarr;I &nbsp;2&rarr;III-A/B &nbsp;3&rarr;III-C &nbsp;4&rarr;III-D &nbsp;5&rarr;III-E &nbsp;6&rarr;IV &nbsp;7&rarr;V (Tables I&ndash;III) &nbsp;8&rarr;defense prep, not in paper</div>
+
+</body>
+</html>
