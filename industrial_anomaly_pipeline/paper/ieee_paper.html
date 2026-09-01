@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scalable Big Data Architecture for Real-Time Industrial Anomaly Detection in Multivariate Time-Series</title>
+<style>
+  @page { size: letter; margin: 0.85in 0.62in 0.75in 0.62in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Liberation Serif", "DejaVu Serif", "Times New Roman", Times, serif;
+    font-size: 10pt;
+    line-height: 1.15;
+    color: #000;
+    margin: 0;
+  }
+  .titleblock { column-span: all; text-align: center; margin-bottom: 4pt; }
+  .paper-title { font-size: 22pt; font-weight: bold; line-height: 1.15; margin: 0 0 10pt 0; }
+  .authors { font-size: 11pt; margin: 0; }
+  .affil { font-size: 10pt; font-style: italic; margin: 1pt 0 14pt 0; }
+
+  .cols { column-count: 2; column-gap: 0.28in; }
+  p { text-align: justify; margin: 0 0 6pt 0; text-indent: 0; }
+  .abstract p, .keywords { margin: 0 0 6pt 0; }
+  .abstract-lead { font-weight: bold; font-style: italic; }
+  .keywords-lead { font-weight: bold; font-style: italic; }
+
+  h2.sec {
+    font-size: 10pt; font-variant: small-caps; letter-spacing: 0.4pt;
+    text-align: center; font-weight: bold; margin: 10pt 0 5pt 0;
+  }
+  h3.subsec {
+    font-size: 10pt; font-style: italic; font-weight: bold;
+    text-align: left; margin: 8pt 0 3pt 0;
+  }
+  code {
+    font-family: "Liberation Mono", "DejaVu Sans Mono", monospace;
+    font-size: 8.6pt;
+    background: #f2f2ef;
+    padding: 0 1.5pt;
+  }
+
+  .figwrap { column-span: all; text-align: center; margin: 8pt 0 4pt 0; }
+  .figwrap img { width: 96%; max-width: 7.1in; }
+  .figcap { column-span: all; font-size: 8.6pt; text-align: left; margin: 0 auto 10pt auto; width: 96%; max-width: 7.1in; }
+  .figcap b { font-weight: bold; }
+
+  .diagram {
+    column-span: all;
+    font-family: "Liberation Mono", "DejaVu Sans Mono", monospace;
+    font-size: 7.6pt;
+    line-height: 1.25;
+    white-space: pre;
+    border: 0.75pt solid #999;
+    background: #fbfbf9;
+    padding: 7pt 10pt;
+    margin: 6pt auto 4pt auto;
+    width: 94%;
+    max-width: 7in;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .tblwrap {
+    column-span: all; margin: 6pt auto 6pt auto; width: 97%; max-width: 7.15in;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .figwrap, .figcap { break-inside: avoid; page-break-inside: avoid; }
+  .figwrap { break-after: avoid; page-break-after: avoid; }
+  .tblcap { font-size: 8.6pt; text-align: center; margin-bottom: 3pt; }
+  table { border-collapse: collapse; width: 100%; font-size: 8.4pt; }
+  table caption { caption-side: top; }
+  thead tr { border-top: 1pt solid #000; border-bottom: 0.75pt solid #000; }
+  tbody tr:last-child { border-bottom: 1pt solid #000; }
+  th, td { padding: 2.4pt 4pt; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  th:nth-child(2), td:nth-child(2) { text-align: left; }
+  th { font-weight: bold; }
+
+  .frac { display: inline-block; vertical-align: middle; text-align: center; margin: 0 3px; font-size: 9.4pt; }
+  .frac .num { display: block; border-bottom: 0.75pt solid #000; padding: 0 4px 1px; }
+  .frac .den { display: block; padding: 1px 4px 0; }
+  .eqn { text-align: center; margin: 6pt 0; font-size: 10pt; }
+  .eqn i { font-style: italic; }
+
+  ol.intro-list { margin: 4pt 0 6pt 16pt; padding: 0; }
+  ol.intro-list li { text-align: justify; margin-bottom: 3pt; }
+
+  .refs { font-size: 8.8pt; }
+  .refs p { text-indent: -12pt; padding-left: 12pt; margin-bottom: 4pt; text-align: left; }
+</style>
+</head>
+<body>
+
+<div class="titleblock">
+  <div class="paper-title">Scalable Big Data Architecture for Real-Time Industrial Anomaly Detection in Multivariate Time-Series</div>
+  <div class="authors">Author Name<sup>1</sup></div>
+  <div class="affil"><sup>1</sup>Affiliation / Institution (to be completed by the author)</div>
+</div>
+
+<div class="cols">
+
+<p class="abstract"><span class="abstract-lead">Abstract -</span>Industrial cyber-physical systems deploy continuous sensor arrays across rotating machinery, processing lines, and turbofan engines. Screening high-frequency multivariate time-series (MTS) streams for anomalies requires strictly bounded processing latencies. This paper evaluates a streaming MTS anomaly detection pipeline designed to meet a sub-20ms per-window latency Service Level Agreement (SLA). The system couples an asynchronous ingestion layer featuring explicit backpressure management to two analytical engines operating behind a unified detector interface: a closed-form Dynamic Mode Decomposition (DMD) with Seasonal-Trend (STL) decomposition engine, and an unsupervised PyTorch LSTM/Dense Autoencoder. Scoring is performed via an evaluation engine that combines reference-centroid Euclidean distance with model error using an epsilon-guarded harmonic mean under dynamic threshold recalibration. System evaluations on the NASA C-MAPSS turbofan dataset and a synthetic five-channel Tool Condition Monitoring (TCM5) dataset demonstrate SLA compliance at nominal throughput for both analytical engines (DMD p99 = 0.20–0.47ms; LSTM Autoencoder p99 = 2.7–3.2ms). Under extreme burst load scenarios, the DMD engine maintains p99 latency under 15ms via backpressure load shedding, whereas the Autoencoder engine degrades to 150–180ms p99 latency.</p>
+
+<p class="keywords"><span class="keywords-lead"><i>Index Terms</i>&mdash;</span>real-time anomaly detection, multivariate time series, dynamic mode decomposition, autoencoder, streaming ingestion, industrial IoT, SLA benchmarking</p>
+
+<h2 class="sec">I. Introduction</h2>
+
+<p>Modern industrial facilities rely on sensor arrays monitoring correlated operational variables sampled at high frequencies. Identifying emerging mechanical faults—such as bearing degradation, spindle overloading, or control loop instability—requires continuous processing of streaming multivariate time series (MTS). Deploying anomaly detection within industrial control environments imposes two main operational constraints:</p>
+
+<ol class="intro-list">
+<li><b>Hard latency constraints.</b> Real-time alert pipelines require processing latencies on the scale of tens of milliseconds per window, inclusive of ingestion, sliding window assembly, and inference.</li>
+<li><b>Label scarcity.</b> Anomalous operational states occur infrequently and are rarely labeled prior to failure, necessitating unsupervised modeling of baseline normal dynamics.</li>
+</ol>
+
+<p>Statistical process control methods provide low computational latency but struggle to capture non-linear, cross-channel interactions. Conversely, deep reconstruction architectures, such as LSTM encoder-decoders [2] and autoencoder variants [1], [7], model complex non-linear relationships by quantifying reconstruction error against learned normal baselines. Dynamic Mode Decomposition (DMD) [3] and Seasonal-Trend decomposition using Loess (STL) [4] offer an alternative linear fast-track approach, utilizing closed-form linear operators and decomposition matrices to isolate residual dynamics without iterative optimization.</p>
+
+<p>While existing literature focuses heavily on offline classification metrics (such as F1 score and AUC-ROC) evaluated on pre-segmented datasets, production deployment depends on streaming systems dynamics. Ingestion queueing, backpressure propagation, dynamic threshold drift, and thread pool exhaustion dictate runtime stability in operational environments [9].</p>
+
+<p>This paper presents a streaming MTS anomaly detection pipeline configured to benchmark linear mathematical and deep learning models within an identical ingestion framework. We evaluate the trade-offs between linear closed-form execution and non-linear deep reconstruction regarding processing latency, memory stability, and detection performance across nominal and burst throughput conditions on the NASA C-MAPSS dataset [5] and a synthetic Tool Condition Monitoring stream.</p>
+
+<p>The remainder of this paper is structured as follows. Section II reviews related research. Section III details the system design, mathematical models, and scoring mechanics. Section IV covers edge-case handling and concurrency controls. Section V presents empirical benchmark results. Section VI concludes with future research directions.</p>
+
+<h2 class="sec">II. Related Work</h2>
+
+<p><b>Reconstruction-based deep anomaly detection.</b> Malhotra et al. [2] implemented LSTM encoder-decoder architectures to compute reconstruction errors for multi-sensor time series. Hundman et al. [1] expanded deep reconstruction approaches to NASA SMAP/MSL spacecraft telemetry using dynamic non-parametric thresholding. Sakurada and Yairi [7] demonstrated autoencoder-based non-linear dimensionality reduction for anomaly detection, establishing the foundation for Dense autoencoders as computationally reduced alternatives to sequential models.</p>
+
+<p><b>Closed-form spatiotemporal modeling.</b> Schmid [3] formalized Dynamic Mode Decomposition (DMD) to extract spatiotemporal modes from linear systems using truncated Singular Value Decomposition (SVD). DMD provides a closed-form, non-iterative linear model fit. Cleveland et al. [4] introduced the STL decomposition framework to partition series into trend, seasonal, and residual components. Combining DMD with STL enables fast computation of spatial residual energy and temporal deviations.</p>
+
+<p><b>Benchmark Datasets.</b> The NASA C-MAPSS turbofan dataset [5] simulates run-to-failure degradation trajectories. In anomaly detection research, remaining useful life (RUL) trajectories are mapped into binary anomaly windows corresponding to near-failure degradation regimes.</p>
+
+<p><b>Streaming Systems.</b> Ren et al. [9] outlined operational metrics for time-series anomaly detection deployed in cloud infrastructure, emphasizing processing latency and online threshold adjustments. This study analyzes these streaming properties under controlled worker load and backpressure settings.</p>
+
+<h2 class="sec">III. System Architecture &amp; Methodology</h2>
+
+<h3 class="subsec">A. Overview</h3>
+<p>The processing architecture consists of four distinct stages:</p>
+
+<div class="diagram"> SensorStreamProducer(s)  --(bounded asyncio.Queue)-->  StreamConsumer
+        |  asyncio tasks, non-blocking                     | sliding-window
+        |  overflow policy: block / drop_oldest / drop_new | assembly, bounded
+        v                                                  | in-flight semaphore
+   Sanitized SensorPacket                                  v
+                                              ThreadPoolExecutor -> BaseAnomalyDetector
+                                                                       |  Engine 1: DMD+STL
+                                                                       |  Engine 2: LSTM/Dense AE
+                                                                       v
+                                                         CompositeScoringEngine
+                                                         harmonic-mean(distance, local_error)
+                                                         + DynamicThresholder
+                                                                       v
+                                                         LatencyTracker + Evaluation Metrics</div>
+
+<h3 class="subsec">B. Ingestion and Concurrency Layer</h3>
+<p>The ingestion module (<code>SensorStreamProducer</code>) simulates continuous multi-sensor telemetry emitting to a bounded non-blocking queue. Three queue overflow management strategies are supported: <code>block</code>, <code>drop_oldest</code>, and <code>drop_new</code>. Non-finite values (NaN/Inf) undergo causal, per-channel exponential moving average imputation at ingress.</p>
+
+<p>The <code>StreamConsumer</code> consumes packets from the queue, constructs sliding windows of dimension (window_size, n_features), and routes complete windows to execution workers via a thread pool executor. To prevent unbounded memory growth during high-throughput bursts, in-flight execution tasks are restricted using an asynchronous semaphore bounded by worker capacity. Saturating the worker pool halts window dispatching, causing queue fill and upstream backpressure propagation to the producers.</p>
+
+<h3 class="subsec">C. Engine 1 &mdash; DMD + STL</h3>
+<p>Given a snapshot matrix containing <i>T</i> continuous multivariate samples <i>x</i><sub>1</sub>,&hellip;,<i>x<sub>T</sub></i>&nbsp;&isin;&nbsp;&#8477;<sup><i>n</i></sup> for <i>n</i> channels, the paired matrices are defined as:</p>
+
+<div class="eqn"><i>X</i> = [<i>x</i><sub>1</sub>, &hellip;, <i>x<sub>T</sub></i><sub>&minus;1</sub>],&nbsp;&nbsp; <i>X</i>&prime; = [<i>x</i><sub>2</sub>, &hellip;, <i>x<sub>T</sub></i>] &isin; &#8477;<sup><i>n</i>&times;(<i>T</i>&minus;1)</sup>. &nbsp;&nbsp;(1)</div>
+
+<p>DMD identifies the best-fit linear operator <i>A</i>&nbsp;&isin;&nbsp;&#8477;<sup><i>n</i>&times;<i>n</i></sup> mapping <i>X</i> to <i>X</i>&prime;. Utilizing a rank-<i>r</i> truncated SVD where <i>X</i>&nbsp;&asymp;&nbsp;<i>U<sub>r</sub>S<sub>r</sub>V<sub>r</sub></i><sup>&#8868;</sup>, operator <i>A</i> is computed via:</p>
+
+<div class="eqn"><i>&Atilde;</i> = <i>U<sub>r</sub></i><sup>&#8868;</sup><i>X</i>&prime;<i>V<sub>r</sub>S<sub>r</sub></i><sup>&minus;1</sup>,&nbsp;&nbsp; <i>A</i> = <i>U<sub>r</sub>&Atilde;U<sub>r</sub></i><sup>&#8868;</sup>. &nbsp;&nbsp;(2)</div>
+
+<p>Diagonal values of <i>S<sub>r</sub></i> are clamped at &epsilon; = 10<sup>&minus;8</sup> to prevent numerical instability under near-zero variance. During inference, one-step reconstruction error over incoming windows serves as the primary linear error metric.</p>
+
+<p>In parallel, channel values undergo STL decomposition [4] into trend, seasonal, and residual components. The relative residual energy is aggregated with the DMD prediction error using equal weighting (&alpha; = 0.5) to produce the Engine 1 score.</p>
+
+<h3 class="subsec">D. Engine 2 &mdash; Deep Reconstruction (LSTM / Dense Autoencoder)</h3>
+<p>Engine 2 implements deep reconstruction architectures. The suite evaluates two variants: an LSTM encoder-decoder suitable for variable sequence inputs, and a Dense autoencoder operating on flattened fixed-length window vectors. Models are trained on baseline normal data using MSE loss and early stopping. Inference executes under disabled gradient computation modes.</p>
+
+<h3 class="subsec">E. Evaluation Engine &mdash; Composite Scoring &amp; Dynamic Thresholding</h3>
+<p>Window anomaly scores combine distance metrics and model residual errors using an epsilon-guarded harmonic mean:</p>
+
+<div class="eqn">score(<i>w</i>) = <span class="frac"><span class="num">2&nbsp;&middot;&nbsp;<i>d</i>(<i>w</i>)&nbsp;&middot;&nbsp;<i>e</i>(<i>w</i>)</span><span class="den"><i>d</i>(<i>w</i>) + <i>e</i>(<i>w</i>) + &epsilon;</span></span>,&nbsp;&nbsp;(3)</div>
+
+<p>where <i>d</i>(<i>w</i>) represents the minimum Euclidean distance between window sample states and <i>k</i> reference cluster centroids fit on normal data, <i>e</i>(<i>w</i>) denotes model error, and &epsilon; = 10<sup>&minus;8</sup> prevents division by zero. The harmonic mean ensures high scores require deviations across both spatial state distance and model residual metrics.</p>
+
+<p>Thresholding is managed dynamically via a rolling baseline computed over recent non-anomalous window scores (<i>&mu;</i> + <i>k&sigma;</i>). If consecutive windows trigger positive detections exceeding a run limit (default 50 windows), the threshold re-initializes to accommodate baseline operational drift.</p>
+
+<h2 class="sec">IV. Robustness &amp; Implementation Details</h2>
+
+<p>System stability under continuous streaming requires explicit handling of numerical and state edge cases:</p>
+
+<p><b>Worker Pool Queue Management.</b> Standard thread pool execution mechanisms utilize unbounded submission queues. Under high input frequencies, queue size growth causes memory expansion. Restricting concurrently active tasks via worker semaphores enforces upstream backpressure propagation through the ingestion queue.</p>
+
+<p><b>Matrix Dimension Validation.</b> Input shapes are validated prior to linear algebra transformations. In dense neural networks requiring static input dimensionalities, mismatched window lengths raise explicit exceptions. Missing or single-frame non-finite readings are imputed using pre-calculated feature means.</p>
+
+<p><b>Baseline Maintenance.</b> Sustained operational state shifts can cause non-anomalous baseline drift, leading to continuous detection triggers. Suppressing threshold updates during flagged windows prevents anomaly contamination of the baseline, while the forced reset threshold handles genuine operating regime shifts.</p>
+
+<h2 class="sec">V. Empirical Evaluation</h2>
+
+<h3 class="subsec">A. Experimental Setup</h3>
+<p>Benchmarks were conducted on single-threaded execution environments using a unified sliding window configuration (window length 30, stride 5, 15% validation split):</p>
+
+<p><b>NASA C-MAPSS (FD001):</b> Turbofan engine degradation dataset containing 16 active sensor channels. The final 30 operational cycles of test trajectories are designated as anomalous. The dataset comprises 2,993 training, 528 validation, and 2,614 test windows.</p>
+
+<p><b>TCM5 (Synthetic):</b> A five-channel Tool Condition Monitoring stream (spindle load, vibration, temperature, acoustic emission) containing synthetic tool wear shifts. The dataset yields 1,016 training, 179 validation, and 595 test windows.</p>
+
+<h3 class="subsec">B. Detection Performance</h3>
+
+<div class="tblwrap">
+<div class="tblcap">TABLE I<br>CLASSIFICATION ACCURACY BY ENGINE AND DATASET</div>
+<table>
+<thead><tr><th>Dataset</th><th>Engine</th><th>F1</th><th>AUC-ROC</th><th>Prec.</th><th>Recall</th></tr></thead>
+<tbody>
+<tr><td>NASA C-MAPSS</td><td>DMD + STL</td><td>0.077</td><td>0.647</td><td>1.000</td><td>0.040</td></tr>
+<tr><td>NASA C-MAPSS</td><td>LSTM AE</td><td>0.194</td><td>0.597</td><td>0.850</td><td>0.109</td></tr>
+<tr><td>NASA C-MAPSS</td><td>Dense AE</td><td>0.194</td><td>0.597</td><td>0.850</td><td>0.109</td></tr>
+<tr><td>TCM5 (synth.)</td><td>DMD + STL</td><td>0.680</td><td>1.000</td><td>0.515</td><td>1.000</td></tr>
+<tr><td>TCM5 (synth.)</td><td>LSTM AE</td><td>0.716</td><td>0.993</td><td>0.566</td><td>0.976</td></tr>
+<tr><td>TCM5 (synth.)</td><td>Dense AE</td><td>0.717</td><td>0.997</td><td>0.570</td><td>0.964</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="figwrap"><img src="figures/classification_accuracy.png" alt="Classification accuracy by engine and dataset"></div>
+<div class="figcap"><b>Fig. 1.</b> Classification performance across models and datasets under dynamic dynamic baseline thresholding.</div>
+
+<p>On TCM5's discrete parameter shifts, both closed-form linear and deep models achieved high separability (AUC-ROC 0.99–1.00). On NASA C-MAPSS, gradual run-to-failure degradation patterns yielded AUC-ROC values between 0.60–0.65. Point-distance Euclidean metrics respond effectively to sudden operational shifts, but show lower recall on long-term continuous drift trajectories.</p>
+
+<h3 class="subsec">C. Latency Benchmarks</h3>
+
+<div class="tblwrap">
+<div class="tblcap">TABLE II<br>PER-WINDOW LATENCY AT NOMINAL THROUGHPUT (MS)</div>
+<table>
+<thead><tr><th>Dataset</th><th>Engine</th><th>p50</th><th>p95</th><th>p99</th><th>Max</th><th>SLA Viol.</th></tr></thead>
+<tbody>
+<tr><td>NASA C-MAPSS</td><td>DMD + STL</td><td>0.264</td><td>0.375</td><td>0.475</td><td>0.887</td><td>0/2,614</td></tr>
+<tr><td>NASA C-MAPSS</td><td>LSTM AE</td><td>1.148</td><td>1.897</td><td>2.739</td><td>4.831</td><td>0/2,614</td></tr>
+<tr><td>NASA C-MAPSS</td><td>Dense AE</td><td>0.191</td><td>0.335</td><td>0.424</td><td>0.674</td><td>0/2,614</td></tr>
+<tr><td>TCM5</td><td>DMD + STL</td><td>0.109</td><td>0.163</td><td>0.196</td><td>0.208</td><td>0/595</td></tr>
+<tr><td>TCM5</td><td>LSTM AE</td><td>1.146</td><td>1.520</td><td>3.167</td><td>7.218</td><td>0/595</td></tr>
+<tr><td>TCM5</td><td>Dense AE</td><td>0.241</td><td>0.376</td><td>0.450</td><td>0.621</td><td>0/595</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="figwrap"><img src="figures/nominal_latency.png" alt="Per-window latency at nominal throughput"></div>
+<div class="figcap"><b>Fig. 2.</b> Per-window execution latency percentiles at nominal throughput relative to the 20ms target SLA.</div>
+
+<p>At nominal workloads, all architectures met the 20ms SLA without violations. The DMD fast-track and Dense Autoencoder recorded p99 processing latencies below 0.5ms across both datasets. The sequential LSTM Autoencoder recorded higher execution latency (p99 2.7–3.2ms) due to recurrent cell transitions.</p>
+
+<h3 class="subsec">D. Load Stress Testing</h3>
+<p>System throughput was evaluated under moderate load (1,000 pkts/s) and extreme burst load conditions (&gt;4,000 pkts/s) using the <code>drop_new</code> load-shedding policy.</p>
+
+<div class="tblwrap">
+<div class="tblcap">TABLE III<br>BURST STRESS TEST: MODERATE VS. EXTREME LOAD</div>
+<table>
+<thead><tr><th>Dataset</th><th>Engine</th><th>Scenario</th><th>Thpt (pkt/s)</th><th>Drop Rate</th><th>p99 (ms)</th><th>SLA Viol.</th></tr></thead>
+<tbody>
+<tr><td>NASA</td><td>DMD+STL</td><td>Moderate</td><td>983</td><td>0.0%</td><td>1.34</td><td>0/80</td></tr>
+<tr><td>NASA</td><td>DMD+STL</td><td>Extreme</td><td>5,661</td><td>65.1%</td><td>14.04</td><td>1/50</td></tr>
+<tr><td>NASA</td><td>LSTM AE</td><td>Moderate</td><td>979</td><td>0.0%</td><td>16.32</td><td>0/80</td></tr>
+<tr><td>NASA</td><td>LSTM AE</td><td>Extreme</td><td>4,774</td><td>66.7%</td><td>179.50</td><td>22/49</td></tr>
+<tr><td>TCM5</td><td>DMD+STL</td><td>Moderate</td><td>986</td><td>0.0%</td><td>0.56</td><td>0/80</td></tr>
+<tr><td>TCM5</td><td>DMD+STL</td><td>Extreme</td><td>7,371</td><td>61.3%</td><td>1.51</td><td>0/58</td></tr>
+<tr><td>TCM5</td><td>LSTM AE</td><td>Moderate</td><td>984</td><td>0.0%</td><td>15.35</td><td>0/80</td></tr>
+<tr><td>TCM5</td><td>LSTM AE</td><td>Extreme</td><td>4,253</td><td>69.2%</td><td>153.73</td><td>25/45</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="figwrap"><img src="figures/stress_latency.png" alt="Burst stress test p99 latency"></div>
+<div class="figcap"><b>Fig. 3.</b> Latency percentiles (p99) under moderate and extreme ingestion load scenarios.</div>
+
+<div class="figwrap"><img src="figures/stress_throughput_drop.png" alt="Burst stress test throughput and drop rate"></div>
+<div class="figcap"><b>Fig. 4.</b> Measured throughput and packet drop percentages under extreme burst conditions.</div>
+
+<p>Under moderate load, all engines processed incoming streams without packet drops while maintaining latencies under 20ms. Under extreme burst conditions, worker concurrency limits shed 61–69% of input volume. During this saturation state, processing times for the DMD engine remained bounded (p99 latency 1.5–14.0ms), while the LSTM Autoencoder latency degraded to 150–180ms p99 due to queueing overhead behind sequential inference execution.</p>
+
+<h2 class="sec">VI. Conclusion &amp; Future Work</h2>
+
+<p>This paper evaluated a real-time multivariate time-series anomaly detection system under latency and throughput constraints. A closed-form DMD+STL engine was compared against deep autoencoder architectures across nominal and burst ingestion loads. Experimental results indicate that while deep autoencoders provide flexible modeling for complex series, closed-form linear operators maintain SLA compliance under severe ingestion bursts where neural inference queues saturate available compute capacity.</p>
+
+<p>Future work includes implementing adaptive execution routing to process nominal windows via closed-form linear models while selectively routing out-of-bounds candidates to deep networks. Additional research will focus on trend-sensitive distance metrics to improve detection performance on continuous degradation trajectories.</p>
+
+<h2 class="sec">References</h2>
+<div class="refs">
+<p>[1] K. Hundman, V. Constantinou, C. Laporte, I. Colwell, and T. S&ouml;derstr&ouml;m, &ldquo;Detecting Spacecraft Anomalies Using LSTMs and Nonparametric Dynamic Thresholding,&rdquo; in <i>Proc. 24th ACM SIGKDD Int. Conf. on Knowledge Discovery &amp; Data Mining (KDD)</i>, 2018.</p>
+<p>[2] P. Malhotra, L. Vig, G. Shroff, and P. Agarwal, &ldquo;Long Short Term Memory Networks for Anomaly Detection in Time Series,&rdquo; in <i>Proc. European Symposium on Artificial Neural Networks (ESANN)</i>, 2015.</p>
+<p>[3] P. J. Schmid, &ldquo;Dynamic mode decomposition of numerical and experimental data,&rdquo; <i>Journal of Fluid Mechanics</i>, vol. 656, pp. 5&ndash;28, 2010.</p>
+<p>[4] R. B. Cleveland, W. S. Cleveland, J. E. McRae, and I. Terpenning, &ldquo;STL: A Seasonal-Trend Decomposition Procedure Based on Loess,&rdquo; <i>Journal of Official Statistics</i>, vol. 6, no. 1, pp. 3&ndash;73, 1990.</p>
+<p>[5] A. Saxena, K. Goebel, D. Simon, and N. Eklund, &ldquo;Damage Propagation Modeling for Aircraft Engine Run-to-Failure Simulation,&rdquo; in <i>Proc. Int. Conf. on Prognostics and Health Management (PHM)</i>, 2008.</p>
+<p>[6] NASA Prognostics Center of Excellence, &ldquo;Turbofan Engine Degradation Simulation Data Set (C-MAPSS),&rdquo; NASA Ames Research Center, Moffett Field, CA.</p>
+<p>[7] M. Sakurada and T. Yairi, &ldquo;Anomaly Detection Using Autoencoders with Nonlinear Dimensionality Reduction,&rdquo; in <i>Proc. MLSDA 2014 2nd Workshop on Machine Learning for Sensory Data Analysis</i>, 2014.</p>
+<p>[8] D. Kwon, H. Kim, J. Kim, S. C. Suh, I. Kim, and K. J. Kim, &ldquo;A survey of deep learning-based network anomaly detection,&rdquo; <i>Cluster Computing</i>, vol. 22, pp. 949&ndash;961, 2019.</p>
+<p>[9] H. Ren et al., &ldquo;Time-Series Anomaly Detection Service at Microsoft,&rdquo; in <i>Proc. 25th ACM SIGKDD Int. Conf. on Knowledge Discovery &amp; Data Mining (KDD)</i>, 2019.</p>
+<p>[10] G. Van Rossum et al., &ldquo;The Python <code>asyncio</code> and <code>concurrent.futures</code> standard library modules,&rdquo; Python Software Foundation. [Online]. Available: https://docs.python.org/3/library/asyncio.html</p>
+<p>[11] A. Paszke et al., &ldquo;PyTorch: An Imperative Style, High-Performance Deep Learning Library,&rdquo; in <i>Advances in Neural Information Processing Systems (NeurIPS)</i>, 2019.</p>
+</div>
+
+</div>
+</body>
+</html>
